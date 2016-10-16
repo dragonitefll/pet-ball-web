@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html ng-app="petBallWeb">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Angular Material style sheet -->
+    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.css">
+
+    <script src="https://www.gstatic.com/firebasejs/3.5.0/firebase.js"></script>
+    <script>
+      // Initialize Firebase
+      var config = {
+        apiKey: "AIzaSyDmlpxa-Dd3JkzH-dcUcF1OZhiWit01FPs",
+        authDomain: "pet-ball.firebaseapp.com",
+        databaseURL: "https://pet-ball.firebaseio.com",
+        storageBucket: "pet-ball.appspot.com",
+        messagingSenderId: "854612674834"
+      };
+      firebase.initializeApp(config);
+    </script>
+
+    <!-- Angular Material requires Angular.js Libraries -->
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-animate.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-aria.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-messages.min.js"></script>
+
+    <!-- Angular Material Library -->
+    <script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.js"></script>
+
+    <script src="petballweb.js"></script>
+  </head>
+  <body ng-controller="PetBallWebController">
+    <div ng-hide="firebase.auth().currentUser">
+      <md-input-container class="md-block">
+        <label>Email</label>
+        <input ng-model="email" />
+      </md-input-container>
+      <md-input-container class="md-block">
+        <label>Password</label>
+        <input ng-model="password" type="password" />
+      </md-input-container>
+      <md-button class="md-raised md-primary" ng-click="signIn()">Sign in</md-button>
+    </div>
+  </body>
+</html>
