@@ -31,35 +31,39 @@ angular.module("petBallWeb", ["ngMaterial"])
     $scope.signalingChannel = new WebSocket("ws://petball.ward.li");
     $scope.signalingChannel.onopen = $scope.handshake;
 
+    $scope.needsHandshake = true;
+
     $scope.handshake = function() {
-      if ($scope.signalingChannel.readyState == 1 && $scope.token) {
+      if ($scope.signalingChannel.readyState == 1 && $scope.token && $scope.needsHandshake) {
         $scope.signalingChannel.send(JSON.stringify({
           hello: "web",
           token: $scope.token
         }));
+        $scope.needsHandshake = false;
       }
     };
 
     $scope.startVideoCall = function() {
       navigator.getUserMedia(constraints, function(stream) {
-        var video = document.getElementById("local-stream");
+        var video = document.getElementById("remote-stream");
         video.muted = true;
-        video.src = window.URL.createObjectURL(stream);
+        video.srcObject = stream;
         video.play();
 
         var pc = new webkitRTCPeerConnection(null);
-        pc.addStream(stream);
+
+        pc.createOffer().then(function(offer) {
+          pc.setLocalDescription(offer);
+        });
 
         pc.onnegotiationneeded = function() {
-          pc.createOffer(function(desc) {
-            pc.setLocalDescription(desc, function() {
-              $scope.signalingChannel.send(JSON.stringify({
-                sdp: pc.localDescription,
-                token: $scope.token
-              }));
-            });
-          });
-        };
+          $scope.signalingChannel.send(JSON.stringify({
+            sdp: pc.localDescription,
+            token: $scope.token
+          }));
+        }
+
+        pc.addStream(stream);
 
         pc.onicecandidate = function(e) {
           if (e.candidate) {
@@ -81,8 +85,11 @@ angular.module("petBallWeb", ["ngMaterial"])
           }
         };
 
-        pc.onaddstream = function(e) {
+        pc.ontrack = function(e) {
           console.log(e);
+          video.srcObject = e.streams[0];
+          video.muted = false;
+          video.play();
         };
       }, angular.noop);
     };
