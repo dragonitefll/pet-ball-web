@@ -28,6 +28,23 @@
     <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.1/angular-material.min.js"></script>
 
     <script src="petballweb.js"></script>
+
+    <style>
+      .joystick {
+        background-color: rgba(0, 0, 0, 0.7);
+        border-radius: 50%;
+        position: relative;
+        cursor: pointer;
+      }
+
+      .joystick-inner {
+        background-color: rgba(255, 255, 255, 0.5);
+        border-radius: 50%;
+        position: absolute;
+        pointer-events: none;
+        transition: all 0.1s;
+      }
+    </style>
   </head>
   <body ng-controller="PetBallWebController">
     <div ng-hide="currentUser">
@@ -45,5 +62,6 @@
       <md-button class="md-raised md-primary" ng-click="startVideoCall()">Click Here To Start A Video Chat. It Is Free And The Quality Is Very High! Your Pet Will Not Feel Lonely Or Anxious At All.</md-button>
     </div>
     <video id="remote-stream" autoplay></video>
+    <joystick ng-model="joystickData"></joystick>
   </body>
 </html>
