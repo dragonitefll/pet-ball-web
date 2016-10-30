@@ -1,5 +1,5 @@
 angular.module("petBallWeb", ["ngMaterial"])
-  .value("constraints", {video: true, audio: true})
+  .value("constraints", {video: {facingMode: "user"}, audio: true})
   .value("webRTCConfig", {iceServers: [{url: "stun:stun.l.google.com:19302"}]})
   .controller("PetBallWebController", function($scope, constraints, webRTCConfig) {
     $scope.firebase = firebase;
@@ -45,7 +45,7 @@ angular.module("petBallWeb", ["ngMaterial"])
     };
 
     $scope.startVideoCall = function() {
-      navigator.getUserMedia(constraints, function(stream) {
+      navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
         var video = document.getElementById("remote-stream");
 
         var pc = new webkitRTCPeerConnection(webRTCConfig);
