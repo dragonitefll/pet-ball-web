@@ -29,7 +29,7 @@ angular.module("petBallWeb", ["ngMaterial"])
       }
     };
 
-    $scope.signalingChannel = new WebSocket("ws://petball.ward.li:3000");
+    $scope.signalingChannel = new WebSocket("wss://petball.ward.li:3000");
     $scope.signalingChannel.onopen = $scope.handshake;
 
     $scope.needsHandshake = true;
