@@ -4,6 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Angular Material style sheet -->
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 
     <script src="https://www.gstatic.com/firebasejs/3.5.0/firebase.js"></script>
     <script>
@@ -30,6 +31,18 @@
     <script src="petballweb.js"></script>
 
     <style>
+      joystick {
+        position: fixed;
+        bottom: 16px;
+        left: 16px;
+      }
+
+      .video-call-controls {
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+      }
+
       .joystick {
         background-color: rgba(0, 0, 0, 0.7);
         border-radius: 50%;
@@ -43,6 +56,41 @@
         position: absolute;
         pointer-events: none;
         transition: all 0.1s;
+      }
+
+      #remote-stream {
+        position: fixed;
+        z-index: -1;
+        background-color: #455A64;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+      }
+
+      #local-stream {
+        background-color: black;
+        width: 200px;
+        height: 150px;
+        border-style: solid;
+        border-width: 1px;
+        border-color: white;
+        position: fixed;
+        top: 16px;
+        right: 16px;
+      }
+
+      body {
+        background-color: transparent;
+      }
+
+      .call-button {
+        position: fixed;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
       }
     </style>
   </head>
@@ -59,9 +107,18 @@
       <md-button class="md-raised md-primary" ng-click="signIn()">Sign in</md-button>
     </div>
     <div ng-show="currentUser">
-      <md-button class="md-raised md-primary" ng-click="startVideoCall()">Click Here To Start A Video Chat. It Is Free And The Quality Is Very High! Your Pet Will Not Feel Lonely Or Anxious At All.</md-button>
+      <video id="remote-stream" autoplay></video>
+      <div ng-show="inVideoCall">
+        <video id="local-stream" autoplay muted></video>
+        <joystick ng-model="joystickData"></joystick>
+        <div class="video-call-controls" layout="column">
+          <md-button class="md-raised md-block" md-colors="laser ? {background: 'red'} : {background: 'grey'}" ng-click="laser = !laser">Laser {{laser ? "on" : "off"}}</md-button>
+          <md-button class="md-raised md-block" md-colors="{background: 'brown'}" ng-click="dispenseTreat()">Treat</md-button>
+        </div>
+      </div>
+      <md-button class="md-fab call-button" md-colors="inVideoCall ? {background: 'red'} : {background: 'green'}" ng-click="inVideoCall ? endVideoCall() : startVideoCall()">
+        <md-icon>{{inVideoCall ? "call_end" : "call"}}</md-icon>
+      </md-button>
     </div>
-    <video id="remote-stream" autoplay></video>
-    <joystick ng-model="joystickData"></joystick>
   </body>
 </html>
