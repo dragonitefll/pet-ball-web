@@ -50,45 +50,48 @@ angular.module("petBallWeb", ["ngMaterial"])
       navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
         var video = document.getElementById("remote-stream");
 
-        var pc = new webkitRTCPeerConnection(webRTCConfig);
+        $scope.peerConnection = new webkitRTCPeerConnection(webRTCConfig);
+        $scope.dataChannel = $scope.peerConnection.createDataChannel("");
 
-        pc.addStream(stream);
+        $scope.peerConnection.addStream(stream);
 
-        pc.createOffer().then(function(offer) {
-          pc.setLocalDescription(offer);
+        $scope.peerConnection.createOffer().then(function(offer) {
+          $scope.peerConnection.setLocalDescription(offer);
         });
 
-        pc.onnegotiationneeded = function(e) {
+        $scope.peerConnection.onnegotiationneeded = function(e) {
           console.log(e);
           $scope.signalingChannel.send(JSON.stringify({
-            sdp: pc.localDescription,
+            sdp: $scope.peerConnection.localDescription,
             token: $scope.token
           }));
         }
 
-        pc.onicecandidate = function(e) {
+        $scope.peerConnection.onicecandidate = function(e) {
           if (e.candidate) {
             $scope.signalingChannel.send(JSON.stringify({
               candidate: e.candidate,
               token: $scope.token
             }));
+            console.log(e.candidate);
           }
         };
 
         $scope.signalingChannel.onmessage = function(payload) {
+          console.log(payload.data);
           var message = JSON.parse(payload.data);
           if (message.sdp) {
-            pc.setRemoteDescription(new RTCSessionDescription(message.sdp), function() {
+            $scope.peerConnection.setRemoteDescription(new RTCSessionDescription(message.sdp), function() {
 
             });
           } else {
             var parts = message.candidate.split(":");
             var candidate = new RTCIceCandidate({sdpMid: parts[0], sdpMLineIndex: parseInt(parts[1]), candidate: parts[2] + ":" + parts[3]});
-            pc.addIceCandidate(candidate);
+            $scope.peerConnection.addIceCandidate(candidate);
           }
         };
 
-        pc.onaddstream = function(e) {
+        $scope.peerConnection.onaddstream = function(e) {
           console.log(e);
           window.event = e;
           video.srcObject = e.stream;
@@ -96,17 +99,38 @@ angular.module("petBallWeb", ["ngMaterial"])
           $scope.inVideoCall = true;
           $scope.$apply();
         };
-      }, angular.noop);
+
+        document.getElementById("local-stream").srcObject = stream;
+        $scope.$apply();
+      });
     };
 
-    $scope.$watch("joystickData", function(newValue, oldValue) {
+    $scope.endVideoCall = function() {
+      $scope.dataChannel.close();
+      $scope.peerConnection.close();
+      $scope.inVideoCall = false;
+      document.getElementById("remote-stream").srcObject = undefined;
+      document.getElementById("local-stream").srcObject = undefined;
+      window.event = null;
+    };
+
+    setInterval(function() {
       if ($scope.inVideoCall) {
-        $scope.signalingChannel.send(JSON.stringify({
-          motors: newValue,
-          token: $scope.token
-        }));
+        ($scope.joystickData.a != 0 && $scope.joystickData.b != 0) && console.log($scope.joystickData);
+        $scope.dataChannel.send(JSON.stringify({motors: $scope.joystickData}));
       }
-    })
+    }, 1000);
+
+    $scope.$watch("laser", function(newValue) {
+      if ($scope.inVideoCall) {
+        $scope.dataChannel.send(JSON.stringify({laser: newValue}));
+      }
+    });
+    $scope.laser = false;
+
+    $scope.dispenseTreat = function() {
+      $scope.dataChannel.send(JSON.stringify({treat: 1}));
+    };
   })
   .directive("joystick", function() { return {
     templateUrl: "joystick.html",
@@ -114,9 +138,9 @@ angular.module("petBallWeb", ["ngMaterial"])
     transclude: false,
     scope: {value: "=ngModel"},
     controller: function($scope) {
-      $scope.size = 100;
+      $scope.size = 200;
       $scope.joystickSize = {width: $scope.size + "px", height: $scope.size + "px"};
-      $scope.joystickInnerStyle = {width: $scope.size / 5 + "px", height: $scope.size / 5 + "px"};
+      $scope.joystickInnerStyle = {width: $scope.size / 10 + "px", height: $scope.size / 10 + "px"};
       $scope.mousemove = function(e) {
         e.preventDefault();
         if (e.buttons > 0) {
@@ -132,8 +156,8 @@ angular.module("petBallWeb", ["ngMaterial"])
           $scope.value = {a: Math.round(speed * m + d), b: Math.round(speed * m - d)};
 
           $scope.joystickInnerStyle.transition = "none";
-          $scope.joystickInnerStyle.left = e.offsetX - ($scope.size / 10) + "px";
-          $scope.joystickInnerStyle.top = e.offsetY - ($scope.size / 10) + "px";
+          $scope.joystickInnerStyle.left = e.offsetX - ($scope.size / 20) + "px";
+          $scope.joystickInnerStyle.top = e.offsetY - ($scope.size / 20) + "px";
         }
       };
       $scope.mouseup = function(e) {
@@ -142,8 +166,8 @@ angular.module("petBallWeb", ["ngMaterial"])
       };
       $scope.resetJoystickInner = function() {
         $scope.joystickInnerStyle.transition = "all 0.2s";
-        $scope.joystickInnerStyle.left = $scope.size * 0.4 + "px";
-        $scope.joystickInnerStyle.top = $scope.size * 0.4 + "px";
+        $scope.joystickInnerStyle.left = $scope.size * 0.45 + "px";
+        $scope.joystickInnerStyle.top = $scope.size * 0.45 + "px";
       };
       $scope.mouseup(null);
     }
