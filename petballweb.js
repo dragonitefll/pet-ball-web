@@ -86,7 +86,11 @@ angular.module("petBallWeb", ["ngMaterial"])
             });
           } else {
             var parts = message.candidate.split(":");
-            var candidate = new RTCIceCandidate({sdpMid: parts[0], sdpMLineIndex: parseInt(parts[1]), candidate: parts[2] + ":" + parts[3]});
+            var c = parts[2];
+            if (parts.length > 3) {
+              c += ":" + parts[3];
+            }
+            var candidate = new RTCIceCandidate({sdpMid: parts[0], sdpMLineIndex: parseInt(parts[1]), candidate: c});
             $scope.peerConnection.addIceCandidate(candidate);
           }
         };
@@ -112,9 +116,14 @@ angular.module("petBallWeb", ["ngMaterial"])
       document.getElementById("remote-stream").srcObject = undefined;
       document.getElementById("local-stream").srcObject = undefined;
       window.event = null;
+
+      $scope.signalingChannel.send(JSON.stringify({
+        ended: true,
+        token: $scope.token
+      }));
     };
 
-    setInterval(function() {
+    $scope.$watch("joystickData.a + ' ' + joystickData.b", function() {
       if ($scope.inVideoCall) {
         ($scope.joystickData.a != 0 && $scope.joystickData.b != 0) && console.log($scope.joystickData);
         $scope.dataChannel.send(JSON.stringify({motors: $scope.joystickData}));
@@ -150,10 +159,32 @@ angular.module("petBallWeb", ["ngMaterial"])
           var speed = Math.round(Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) * 255 / ($scope.size / 2));
           var direction = Math.round(Math.atan2(y, x) * 180 / Math.PI) + 90;
 
-          var d = (90 - Math.abs(Math.abs(direction) - 90)) * 17 / 3;
-          var m = (Math.abs(direction) > 90) ? -1 : 1;
-
-          $scope.value = {a: Math.round(speed * m + d), b: Math.round(speed * m - d)};
+          switch (Math.floor((direction + (direction < 0 ? 360 : 0)) / 45 + 0.5)) {
+            case 1:
+              $scope.value = {a: speed * 0.5, b: speed};
+              break;
+            case 2:
+              $scope.value = {a: 0, b: speed};
+              break;
+            case 3:
+              $scope.value = {a: -speed * 0.5, b: -speed};
+              break;
+            case 4:
+              $scope.value = {a: -speed, b: -speed};
+              break;
+            case 5:
+              $scope.value = {a: -speed, b: -speed * 0.5};
+              break;
+            case 6:
+              $scope.value = {a: speed, b: 0};
+              break;
+            case 7:
+              $scope.value = {a: speed, b: speed * 0.5};
+              break;
+            default:
+              $scope.value = {a: speed, b: speed};
+              break;
+          }
 
           $scope.joystickInnerStyle.transition = "none";
           $scope.joystickInnerStyle.left = e.offsetX - ($scope.size / 20) + "px";
