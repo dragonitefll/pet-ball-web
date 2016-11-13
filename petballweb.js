@@ -1,8 +1,10 @@
 angular.module("petBallWeb", ["ngMaterial"])
   .value("constraints", {video: {facingMode: "user"}, audio: true})
   .value("webRTCConfig", {iceServers: [{url: "stun:stun.l.google.com:19302"}]})
-  .controller("PetBallWebController", function($scope, constraints, webRTCConfig) {
+  .controller("PetBallWebController", function($scope, constraints, webRTCConfig, $mdDialog) {
     $scope.firebase = firebase;
+
+    $scope.screen = "main";
 
     firebase.auth().onAuthStateChanged(function(user) {
       if (user) {
@@ -140,6 +142,38 @@ angular.module("petBallWeb", ["ngMaterial"])
     $scope.dispenseTreat = function() {
       $scope.dataChannel.send(JSON.stringify({treat: 1}));
     };
+
+    $scope.addCustomActivity = function(e) {
+      $mdDialog.show(
+        $mdDialog.prompt()
+          .title("Add custom activity")
+          .placeholder("URL")
+          .ok("Done")
+          .cancel("Cancel")
+          .targetEvent(e)
+      ).then(function(result) {
+        var a = localStorage.petBallActivities ? JSON.parse(localStorage.petBallActivities) : [];
+        a.push(result + ";" + result);
+        $scope.activities = a;
+        localStorage.petBallActivities = JSON.stringify(a);
+      });
+    }
+
+    $scope.launchActivity = function(url) {
+      $scope.signalingChannel.send(JSON.stringify({
+        url: url,
+        token: $scope.token
+      }));
+    }
+
+    $scope.activities = JSON.parse(localStorage.petBallActivities);
+
+    $scope.deleteActivity = function(i) {
+      var a = localStorage.petBallActivities ? JSON.parse(localStorage.petBallActivities) : [];
+      a.splice(i, 1);
+      $scope.activities = a;
+      localStorage.petBallActivities = JSON.stringify(a);
+    }
   })
   .directive("joystick", function() { return {
     templateUrl: "joystick.html",

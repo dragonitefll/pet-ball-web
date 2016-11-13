@@ -31,6 +31,11 @@
     <script src="petballweb.js"></script>
 
     <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+
       joystick {
         position: fixed;
         bottom: 16px;
@@ -86,11 +91,47 @@
         background-color: transparent;
       }
 
-      .call-button {
+      .hang-up-button {
         position: fixed;
         bottom: 16px;
         left: 50%;
         transform: translateX(-50%);
+      }
+
+      .pet-ball-menu {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -100px);
+        min-height: 200px;
+        background-color: white;
+        min-width: 300px;
+        border-radius: 2px;
+        padding: 8px;
+        width: auto;
+        height: auto;
+        overflow: hidden;
+
+      }
+
+      .pet-ball-menu .md-fab {
+        transition: transform 0.5s, box-shadow: 0.25s;
+      }
+      .pet-ball-menu .md-fab .md-icon {
+        transition: opacity 0.3s;
+        opacity: 1;
+      }
+      .pet-ball-menu .md-fab:active {
+        transform: scale(30);
+        box-shadow: none;
+        z-index: 100;
+      }
+      .pet-ball-menu .md-fab:active md-icon {
+        opacity: 0;
+      }
+      .pet-ball-menu .md-fab:active {
+        transform: scale(30);
+        box-shadow: none;
       }
     </style>
   </head>
@@ -107,6 +148,60 @@
       <md-button class="md-raised md-primary" ng-click="signIn()">Sign in</md-button>
     </div>
     <div ng-show="currentUser">
+      <div ng-hide="inVideoCall" md-whiteframe="3" class="pet-ball-menu">
+        <md-toolbar ng-show="screen != 'main'" style="background-color: transparent; color: black;" ng-click="screen = 'main'">
+          <div class="md-toolbar-tools">
+            <md-button class="md-icon-button">
+              <md-icon style="color: black;">arrow_back</md-icon>
+            </md-button>
+            <h2><span>{{screen}}</span></h2>
+          </div>
+        </md-toolbar>
+        <div ng-show="screen == 'main'" class="pet-ball-main">
+          <h1 class="md-headline">Welcome to your Pet Ball</h1>
+          <h2 class="md-title">Customize and control your Pet Ball here.</h2>
+          <div layout="row" layout-align="center center" style="margin-top: 8px;">
+            <div layout="column" layout-align="start center" flex>
+              <md-button class="md-fab" md-no-ink md-colors="{background: 'green'}" ng-click="startVideoCall()" md-whiteframe="-1">
+                <md-icon>call</md-icon>
+              </md-button>
+              <p>Video chat</p>
+            </div>
+            <div layout="column" layout-align="start center" flex>
+              <md-button class="md-fab" md-no-ink md-colors="{background: 'lime'}" ng-click="screen = 'activities'" md-whiteframe="-1">
+                <md-icon>videogame_asset</md-icon>
+              </md-button>
+              <p>Activities</p>
+            </div>
+            <div layout="column" layout-align="start center" flex>
+              <md-button class="md-fab" md-no-ink md-colors="{background: 'blue-grey'}" ng-click="screen = 'settings'" md-whiteframe="-1">
+                <md-icon>settings</md-icon>
+              </md-button>
+              <p>Settings</p>
+            </div>
+          </div>
+          <div layout="row" layout-align="end center">
+            <md-button class="md-warn" ng-click="firebase.auth().signOut()">Sign out</md-button>
+          </div>
+        </div>
+        <div ng-show="screen == 'activities'">
+          <md-list>
+            <md-list-item ng-click="launchActivity('default')">
+              <p>None</p>
+            </md-list-item>
+            <md-list-item ng-repeat="activity in activities track by $index" ng-click="launchActivity(activity.split(';')[1])">
+              <p>{{activity.split(';')[0]}}</p>
+              <md-icon class="md-secondary" ng-click="deleteActivity($index)">delete</md-icon>
+            </md-list-item>
+            <md-list-item>
+              <p>Add from store...</p>
+            </md-list-item>
+            <md-list-item ng-click="addCustomActivity($event)">
+              <p>Custom...</p>
+            </md-list-item>
+          </md-list>
+        </div>
+      </div>
       <video id="remote-stream" autoplay></video>
       <div ng-show="inVideoCall">
         <video id="local-stream" autoplay muted></video>
@@ -115,10 +210,8 @@
           <md-button class="md-raised md-block" md-colors="laser ? {background: 'red'} : {background: 'grey'}" ng-click="laser = !laser">Laser {{laser ? "on" : "off"}}</md-button>
           <md-button class="md-raised md-block" md-colors="{background: 'brown'}" ng-click="dispenseTreat()">Treat</md-button>
         </div>
+        <md-button class="md-fab hang-up-button" md-colors="{background: 'red'}" ng-click="endVideoCall()"><md-icon>call_end</md-icon></md-button>
       </div>
-      <md-button class="md-fab call-button" md-colors="inVideoCall ? {background: 'red'} : {background: 'green'}" ng-click="inVideoCall ? endVideoCall() : startVideoCall()">
-        <md-icon>{{inVideoCall ? "call_end" : "call"}}</md-icon>
-      </md-button>
     </div>
   </body>
 </html>
