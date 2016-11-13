@@ -157,7 +157,7 @@ angular.module("petBallWeb", ["ngMaterial"])
       }));
     }
 
-    $scope.activities = JSON.parse(localStorage.petBallActivities);
+    $scope.activities = localStorage.petBallActivities ? JSON.parse(localStorage.petBallActivities) : [];
 
     $scope.deleteActivity = function(i) {
       var a = localStorage.petBallActivities ? JSON.parse(localStorage.petBallActivities) : [];
