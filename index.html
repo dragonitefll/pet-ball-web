@@ -170,10 +170,10 @@
               <p>None</p>
               <md-button class="md-fab md-mini md-warn md-secondary" ng-click="launchActivity('default')"><md-icon>play_arrow</md-icon></md-button>
             </md-list-item>
-            <md-list-item ng-repeat="activity in activities track by $index">
-              <p>{{activity.split(';')[0]}}</p>
-              <md-button class="md-fab md-mini md-primary md-secondary" ng-click="launchActivity(activity.split(';')[1])"><md-icon>play_arrow</md-icon></md-button>
-              <md-icon class="md-secondary" ng-click="deleteActivity($index)">delete</md-icon>
+            <md-list-item ng-repeat="(key, activity) in userData.activities">
+              <p>{{activity.name}}</p>
+              <md-button class="md-fab md-mini md-primary md-secondary" ng-click="launchActivity(activity.url)"><md-icon>play_arrow</md-icon></md-button>
+              <md-icon class="md-secondary" ng-click="deleteActivity(key)">delete</md-icon>
             </md-list-item>
             <md-list-item style="opacity: 0.5;" ng-click="comingSoon($event)">
               <p>Add from store...</p>
