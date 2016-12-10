@@ -144,16 +144,40 @@ angular.module("petBallWeb", ["ngMaterial"])
     };
 
     $scope.addCustomActivity = function(e) {
-      $mdDialog.show(
-        $mdDialog.prompt()
-          .title("Add custom activity")
-          .placeholder("URL")
-          .ok("Done")
-          .cancel("Cancel")
-          .targetEvent(e)
-      ).then(function(result) {
+      $mdDialog.show({
+        targetEvent: e,
+        template: `
+          <md-dialog>
+            <md-dialog-content class="md-dialog-content">
+              <h2 class="md-title">Add a custom activity</h2>
+              <p>You'll need to know the name and the URL.</p>
+              <form name='customActivityForm'>
+                <md-input-container class="md-block">
+                  <label>Name</label>
+                  <input required ng-model="name" />
+                </md-input-container>
+                <md-input-container class="md-block">
+                  <label>URL</label>
+                  <input required type="url" ng-model="url" />
+                </md-input-container>
+              </form>
+            </md-dialog-content>
+            <md-dialog-actions>
+              <md-button class="md-accent" ng-click="cancel()">Cancel</md-button>
+              <md-button class="md-raised md-accent" ng-click="ok()" ng-disabled="!customActivityForm.$valid">Ok</md-button>
+            </md-dialog-actions>
+          </md-dialog>
+        `,
+        controller: function($scope, $mdDialog) {
+          $scope.ok = function() {
+            $mdDialog.hide({name: $scope.name, url: $scope.url});
+          };
+
+          $scope.cancel = $mdDialog.cancel;
+        }
+      }).then(function(result) {
         var a = localStorage.petBallActivities ? JSON.parse(localStorage.petBallActivities) : [];
-        a.push(result + ";" + result);
+        a.push(result.name + ";" + result.url);
         $scope.activities = a;
         localStorage.petBallActivities = JSON.stringify(a);
       });
@@ -164,15 +188,22 @@ angular.module("petBallWeb", ["ngMaterial"])
         url: url,
         token: $scope.token
       }));
+      console.log(url);
+    };
+
+    $scope.comingSoon = function(e) {
+      $mdDialog.show($mdDialog.alert().title('Coming soon').ok('Ok').clickOutsideToClose(true).targetEvent(e)).then(angular.noop);
     }
 
     $scope.activities = JSON.parse(localStorage.petBallActivities);
 
     $scope.deleteActivity = function(i) {
-      var a = localStorage.petBallActivities ? JSON.parse(localStorage.petBallActivities) : [];
-      a.splice(i, 1);
-      $scope.activities = a;
-      localStorage.petBallActivities = JSON.stringify(a);
+      $mdDialog.show($mdDialog.confirm().title("Delete this activity?").ok("Delete").cancel("Cancel")).then(function() {
+        var a = localStorage.petBallActivities ? JSON.parse(localStorage.petBallActivities) : [];
+        a.splice(i, 1);
+        $scope.activities = a;
+        localStorage.petBallActivities = JSON.stringify(a);
+      });
     }
   })
   .directive("joystick", function() { return {
@@ -184,48 +215,42 @@ angular.module("petBallWeb", ["ngMaterial"])
       $scope.size = 200;
       $scope.joystickSize = {width: $scope.size + "px", height: $scope.size + "px"};
       $scope.joystickInnerStyle = {width: $scope.size / 10 + "px", height: $scope.size / 10 + "px"};
-      $scope.mousemove = function(e) {
-        e.preventDefault();
-        if (e.buttons > 0) {
-          var x = e.offsetX - ($scope.size / 2);
-          var y = e.offsetY - ($scope.size / 2);
+      $scope.move = function(x, y) {
+        var speed = Math.round(Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) * 255 / ($scope.size / 2));
+        var direction = Math.round(Math.atan2(y, x) * 180 / Math.PI) + 90;
 
-          var speed = Math.round(Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) * 255 / ($scope.size / 2));
-          var direction = Math.round(Math.atan2(y, x) * 180 / Math.PI) + 90;
-
-          switch (Math.floor((direction + (direction < 0 ? 360 : 0)) / 45 + 0.5)) {
-            case 1:
-              $scope.value = {a: speed * 0.5, b: speed};
-              break;
-            case 2:
-              $scope.value = {a: 0, b: speed};
-              break;
-            case 3:
-              $scope.value = {a: -speed * 0.5, b: -speed};
-              break;
-            case 4:
-              $scope.value = {a: -speed, b: -speed};
-              break;
-            case 5:
-              $scope.value = {a: -speed, b: -speed * 0.5};
-              break;
-            case 6:
-              $scope.value = {a: speed, b: 0};
-              break;
-            case 7:
-              $scope.value = {a: speed, b: speed * 0.5};
-              break;
-            default:
-              $scope.value = {a: speed, b: speed};
-              break;
-          }
-
-          $scope.joystickInnerStyle.transition = "none";
-          $scope.joystickInnerStyle.left = e.offsetX - ($scope.size / 20) + "px";
-          $scope.joystickInnerStyle.top = e.offsetY - ($scope.size / 20) + "px";
+        switch (Math.floor((direction + (direction < 0 ? 360 : 0)) / 45 + 0.5)) {
+          case 1:
+            $scope.value = {a: speed * 0.5, b: speed};
+            break;
+          case 2:
+            $scope.value = {a: 0, b: speed};
+            break;
+          case 3:
+            $scope.value = {a: -speed * 0.5, b: -speed};
+            break;
+          case 4:
+            $scope.value = {a: -speed, b: -speed};
+            break;
+          case 5:
+            $scope.value = {a: -speed, b: -speed * 0.5};
+            break;
+          case 6:
+            $scope.value = {a: speed, b: 0};
+            break;
+          case 7:
+            $scope.value = {a: speed, b: speed * 0.5};
+            break;
+          default:
+            $scope.value = {a: speed, b: speed};
+            break;
         }
+
+        $scope.joystickInnerStyle.transition = "none";
+        $scope.joystickInnerStyle.left = e.offsetX - ($scope.size / 20) + "px";
+        $scope.joystickInnerStyle.top = e.offsetY - ($scope.size / 20) + "px";
       };
-      $scope.mouseup = function(e) {
+      $scope.release = function() {
         $scope.value = {a: 0, b: 0};
         $scope.resetJoystickInner();
       };
@@ -234,6 +259,15 @@ angular.module("petBallWeb", ["ngMaterial"])
         $scope.joystickInnerStyle.left = $scope.size * 0.45 + "px";
         $scope.joystickInnerStyle.top = $scope.size * 0.45 + "px";
       };
-      $scope.mouseup(null);
+
+      $scope.mousemove = function(e) {
+        if (e.buttons > 0) {
+          var x = e.offsetX - ($scope.size / 2);
+          var y = e.offsetY - ($scope.size / 2);
+          $scope.move(x, y);
+        }
+      };
+
+      $scope.release();
     }
   }})

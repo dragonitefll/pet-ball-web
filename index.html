@@ -113,26 +113,6 @@
         overflow: hidden;
 
       }
-
-      .pet-ball-menu .md-fab {
-        transition: transform 0.5s, box-shadow: 0.25s;
-      }
-      .pet-ball-menu .md-fab .md-icon {
-        transition: opacity 0.3s;
-        opacity: 1;
-      }
-      .pet-ball-menu .md-fab:active {
-        transform: scale(30);
-        box-shadow: none;
-        z-index: 100;
-      }
-      .pet-ball-menu .md-fab:active md-icon {
-        opacity: 0;
-      }
-      .pet-ball-menu .md-fab:active {
-        transform: scale(30);
-        box-shadow: none;
-      }
     </style>
   </head>
   <body ng-controller="PetBallWebController">
@@ -162,19 +142,19 @@
           <h2 class="md-title">Customize and control your Pet Ball here.</h2>
           <div layout="row" layout-align="center center" style="margin-top: 8px;">
             <div layout="column" layout-align="start center" flex>
-              <md-button class="md-fab" md-no-ink md-colors="{background: 'green'}" ng-click="startVideoCall()" md-whiteframe="-1">
+              <md-button class="md-fab" md-colors="{background: 'green'}" ng-click="startVideoCall()" md-whiteframe="-1">
                 <md-icon>call</md-icon>
               </md-button>
               <p>Video chat</p>
             </div>
             <div layout="column" layout-align="start center" flex>
-              <md-button class="md-fab" md-no-ink md-colors="{background: 'lime'}" ng-click="screen = 'activities'" md-whiteframe="-1">
+              <md-button class="md-fab" md-colors="{background: 'lime'}" ng-click="screen = 'activities'" md-whiteframe="-1">
                 <md-icon>videogame_asset</md-icon>
               </md-button>
               <p>Activities</p>
             </div>
             <div layout="column" layout-align="start center" flex>
-              <md-button class="md-fab" md-no-ink md-colors="{background: 'blue-grey'}" ng-click="screen = 'settings'" md-whiteframe="-1">
+              <md-button class="md-fab" md-colors="{background: 'blue-grey'}" ng-click="screen = 'settings'" md-whiteframe="-1">
                 <md-icon>settings</md-icon>
               </md-button>
               <p>Settings</p>
@@ -186,14 +166,16 @@
         </div>
         <div ng-show="screen == 'activities'">
           <md-list>
-            <md-list-item ng-click="launchActivity('default')">
+            <md-list-item>
               <p>None</p>
+              <md-button class="md-fab md-mini md-warn md-secondary" ng-click="launchActivity('default')"><md-icon>play_arrow</md-icon></md-button>
             </md-list-item>
-            <md-list-item ng-repeat="activity in activities track by $index" ng-click="launchActivity(activity.split(';')[1])">
+            <md-list-item ng-repeat="activity in activities track by $index">
               <p>{{activity.split(';')[0]}}</p>
+              <md-button class="md-fab md-mini md-primary md-secondary" ng-click="launchActivity(activity.split(';')[1])"><md-icon>play_arrow</md-icon></md-button>
               <md-icon class="md-secondary" ng-click="deleteActivity($index)">delete</md-icon>
             </md-list-item>
-            <md-list-item>
+            <md-list-item style="opacity: 0.5;" ng-click="comingSoon($event)">
               <p>Add from store...</p>
             </md-list-item>
             <md-list-item ng-click="addCustomActivity($event)">
