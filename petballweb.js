@@ -1,8 +1,10 @@
 angular.module("petBallWeb", ["ngMaterial"])
   .value("constraints", {video: {facingMode: "user"}, audio: true})
   .value("webRTCConfig", {iceServers: [{url: "stun:stun.l.google.com:19302"}]})
-  .controller("PetBallWebController", function($scope, constraints, webRTCConfig, $mdDialog) {
+  .controller("PetBallWebController", function($scope, constraints, webRTCConfig, $mdDialog, $timeout) {
     $scope.firebase = firebase;
+    $scope.userRef = null;
+    $scope.userData = null;
 
     $scope.screen = "main";
 
@@ -12,8 +14,17 @@ angular.module("petBallWeb", ["ngMaterial"])
           $scope.token = token;
           $scope.handshake();
         });
+
+        $scope.userRef = firebase.database().ref("/users/").child(user.uid);
+        $scope.userRef.on("value", function(data) {
+          $timeout(function() {
+            $scope.userData = data.val();
+          });
+        });
       } else {
         $scope.token = undefined;
+        $scope.userRef = null;
+        $scope.userData = null;
       }
       $scope.currentUser = user;
       $scope.$apply();
@@ -176,10 +187,7 @@ angular.module("petBallWeb", ["ngMaterial"])
           $scope.cancel = $mdDialog.cancel;
         }
       }).then(function(result) {
-        var a = localStorage.petBallActivities ? JSON.parse(localStorage.petBallActivities) : [];
-        a.push(result.name + ";" + result.url);
-        $scope.activities = a;
-        localStorage.petBallActivities = JSON.stringify(a);
+        $scope.userRef.child("activities").push().set(result);
       });
     }
 
@@ -195,14 +203,9 @@ angular.module("petBallWeb", ["ngMaterial"])
       $mdDialog.show($mdDialog.alert().title('Coming soon').ok('Ok').clickOutsideToClose(true).targetEvent(e)).then(angular.noop);
     }
 
-    $scope.activities = JSON.parse(localStorage.petBallActivities);
-
     $scope.deleteActivity = function(i) {
       $mdDialog.show($mdDialog.confirm().title("Delete this activity?").ok("Delete").cancel("Cancel")).then(function() {
-        var a = localStorage.petBallActivities ? JSON.parse(localStorage.petBallActivities) : [];
-        a.splice(i, 1);
-        $scope.activities = a;
-        localStorage.petBallActivities = JSON.stringify(a);
+        $scope.userRef.child("activities").child(i).remove();
       });
     }
   })
